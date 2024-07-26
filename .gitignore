@@ -1,0 +1,17 @@
+
+*.vsidx
+*.ipch
+/.vs
+/assets
+*.jpeg
+*.sln
+*.filters
+*.user
+*.vcxproj
+*.dll
+*.map
+*.dat
+*.c#
+*.json
+/vendor
+/x64
