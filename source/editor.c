@@ -303,7 +303,7 @@ void editor_set_key(const int code, const uint8_t state)
     if ((code >= 0) && (code < KEYCODE_COUNT)) {
         editor->keyboard.keys[code] = state;
     }
- }
+}
 
 int editor_get_key(const int code)
 {

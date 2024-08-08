@@ -52,6 +52,10 @@ win32_update_window(HDC device_context,
 internal HMENU
 win32_create_menu();
 
+internal int
+get_keycode_from_w_param(int w_param);
+
+
 
 int CALLBACK
 WinMain(HINSTANCE hInstance,
@@ -201,53 +205,10 @@ win32_window_callback(HWND window_handle,
         
         case WM_KEYDOWN:
         {
-            switch (w_param)
-            {
-                case 'A': {
-                    editor_set_key(KEYCODE_A, KEYSTATE_PRESSED);
-                } break;
-                
-                case 'D': {
-                    editor_set_key(KEYCODE_D, KEYSTATE_PRESSED);
-                } break;
-                
-                case 'W': {
-                    editor_set_key(KEYCODE_W, KEYSTATE_PRESSED);
-                } break;
-                
-                case 'S': {
-                    editor_set_key(KEYCODE_S, KEYSTATE_PRESSED);
-                } break;
-                
-                case VK_RIGHT: {
-                    editor_set_key(KEYCODE_RIGHT, KEYSTATE_PRESSED);
-                } break;
-                
-                case VK_LEFT: {
-                    editor_set_key(KEYCODE_LEFT, KEYSTATE_PRESSED);
-                } break;
-                
-                case VK_RETURN: {
-                    editor_set_key(KEYCODE_RETURN, KEYSTATE_PRESSED);
-                } break;
-                
-                case VK_BACK: {
-                    editor_set_key(KEYCODE_BACKSPACE, KEYSTATE_PRESSED);
-                } break;
-                
-                case VK_CONTROL: {
-                    editor_set_key(KEYCODE_CTRL, KEYSTATE_PRESSED);
-                } break;
-                
-                case VK_ADD: {
-                    editor_set_key(KEYCODE_ADD, KEYSTATE_PRESSED);
-                } break;
-                
-                case VK_SUBTRACT: {
-                    editor_set_key(KEYCODE_SUBTRACT, KEYSTATE_PRESSED);
-                } break;
-                
-                default: break;
+            int code = get_keycode_from_w_param(w_param);
+            
+            if (code != -1) {
+                editor_set_key(code, KEYSTATE_PRESSED);
             }
         } break;
         
@@ -354,4 +315,60 @@ win32_update_window(HDC device_context,
                   bitmap->data, &win32_bitmap_info,
                   DIB_RGB_COLORS,
                   SRCCOPY);
+}
+
+
+internal int
+get_keycode_from_w_param(int w_param)
+{
+    switch (w_param)
+    {
+        case 'A': {
+            return KEYCODE_A;
+        } break;
+        
+        case 'D': {
+            return KEYCODE_D;
+        } break;
+        
+        case 'W': {
+            return KEYCODE_W;
+        } break;
+        
+        case 'S': {
+            return KEYCODE_S;
+        } break;
+        
+        case VK_RIGHT: {
+            return KEYCODE_RIGHT;
+        } break;
+        
+        case VK_LEFT: {
+            return KEYCODE_LEFT;
+        } break;
+        
+        case VK_RETURN: {
+            return KEYCODE_RETURN;
+        } break;
+        
+        case VK_BACK: {
+            return KEYCODE_BACKSPACE;
+        } break;
+        
+        case VK_CONTROL: {
+            return KEYCODE_CTRL;
+        } break;
+        
+        case VK_ADD: {
+            return KEYCODE_ADD;
+        } break;
+        
+        case VK_SUBTRACT: {
+            return KEYCODE_SUBTRACT;
+        } break;
+        
+        default: break;
+    }
+    
+    return -1;
 }
