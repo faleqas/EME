@@ -4,6 +4,8 @@
 
 #include <stb_image.h>
 
+#include <windows.h>
+
 #include "editor.h"
 #include "defines.h"
 #include "input.h"
@@ -24,9 +26,9 @@ void editor_init()
 {
     editor = calloc(1, sizeof(struct Editor));
     assert(editor);
-    editor->state = E_SELECT_TILE;
+    editor->state = E_PLAY_AREA;
     editor->bitmap.bytes_per_pixel = 4;
-    editor->keyboard.keys = calloc(KEYCODE_COUNT, sizeof(uint8_t));
+    editor->keyboard.keys = calloc(KEYCODE_COUNT, sizeof(uint32_t));
     
     const int map_w = 0;
     const int map_h = 0;
@@ -68,13 +70,17 @@ void editor_update()
 {
     _editor_update_play_area_size();
     
-    if (editor_get_key(KEYCODE_CTRL) == KEYSTATE_PRESSED) {
-        if (editor_get_key(KEYCODE_S) == KEYSTATE_PRESSED) {
+    if (editor_get_key(KEYCODE_CTRL) & KEYSTATE_PRESSED) {
+        if (editor_get_key(KEYCODE_S) & KEYSTATE_JUST_PRESSED) {
             if (editor->state == E_PLAY_AREA) {
                 editor->state = E_SELECT_TILE;
+                editor->cursor.x = 0;
+                editor->cursor.y = 0;
             }
             else {
                 editor->state = E_PLAY_AREA;
+                editor->cursor.x = 0;
+                editor->cursor.y = 0;
             }
         }
     }
@@ -92,8 +98,13 @@ void editor_update()
         } break;
     };
     
-    memset(editor->keyboard.keys, 0, sizeof(uint8_t) * KEYCODE_COUNT);
+    //memset(editor->keyboard.keys, 0, sizeof(uint8_t) * KEYCODE_COUNT);
     editor->mouse.just_moved = false;
+    
+    for (int i = 0; i < KEYCODE_COUNT; i++)
+    {
+        editor->keyboard.keys[i] &= ~KEYSTATE_JUST_PRESSED;
+    }
 }
 
 
@@ -116,19 +127,19 @@ void _editor_update_play_area()
         editor_set_tile(TILE_NONE);
     }
     
-    if (editor_get_key(KEYCODE_RIGHT) == KEYSTATE_PRESSED) {
+    if (editor_get_key(KEYCODE_RIGHT) & KEYSTATE_JUST_PRESSED) {
         editor->camera.tile_x++;
         editor->should_redraw = true;
     }
-    else if (editor_get_key(KEYCODE_LEFT) == KEYSTATE_PRESSED) {
+    else if (editor_get_key(KEYCODE_LEFT) & KEYSTATE_JUST_PRESSED) {
         editor->camera.tile_x--;
         editor->should_redraw = true;
     }
     
-    if (editor_get_key(KEYCODE_ADD) == KEYSTATE_PRESSED) {
+    if (editor_get_key(KEYCODE_ADD) & KEYSTATE_JUST_PRESSED) {
         editor_tilemap_zoom(1);
     }
-    else if (editor_get_key(KEYCODE_SUBTRACT) == KEYSTATE_PRESSED) {
+    else if (editor_get_key(KEYCODE_SUBTRACT) & KEYSTATE_JUST_PRESSED) {
         editor_tilemap_zoom(-1);
     }
 }
@@ -246,6 +257,10 @@ bool editor_draw()
             cursor_x += editor->play_area_left;
             cursor_y += editor->play_area_top;
             
+            //cursor_w = editor->tile_preview_w;
+            //cursor_h = editor->tile_preview_h;
+        }
+        else if (editor->state == E_SELECT_TILE) {
             cursor_w = editor->tile_preview_w;
             cursor_h = editor->tile_preview_h;
         }
@@ -305,6 +320,7 @@ void editor_set_key(const int code, const uint8_t state)
     }
 }
 
+
 int editor_get_key(const int code)
 {
     if ((code >= 0) && (code < KEYCODE_COUNT)) {
@@ -315,24 +331,40 @@ int editor_get_key(const int code)
 }
 
 
+void editor_add_key_state(const int code, const uint8_t state)
+{
+    if ((code >= 0) && (code < KEYCODE_COUNT)) {
+        editor->keyboard.keys[code] |= state;
+    }
+}
+
+
+void editor_remove_key_state(const int code, const uint8_t state)
+{
+    if ((code >= 0) && (code < KEYCODE_COUNT)) {
+        editor->keyboard.keys[code] &= ~state;
+    }
+}
+
+
 void editor_move_cursor_play_area(int max_x, int max_y)
 {
     int prev_x = editor->cursor.x;
     int prev_y = editor->cursor.y;
     
-    if (editor_get_key(KEYCODE_D) == KEYSTATE_PRESSED) {
+    if (editor_get_key(KEYCODE_D) & KEYSTATE_JUST_PRESSED) {
         editor->cursor.x += editor->tile_w;
         editor->should_redraw = true;
     }
-    else if (editor_get_key(KEYCODE_A) == KEYSTATE_PRESSED) {
+    else if (editor_get_key(KEYCODE_A) & KEYSTATE_JUST_PRESSED) {
         editor->cursor.x -= editor->tile_w;
         editor->should_redraw = true;
     }
-    else if (editor_get_key(KEYCODE_S) == KEYSTATE_PRESSED) {
+    else if (editor_get_key(KEYCODE_S) & KEYSTATE_JUST_PRESSED) {
         editor->cursor.y += editor->tile_h;
         editor->should_redraw = true;
     }
-    else if (editor_get_key(KEYCODE_W) == KEYSTATE_PRESSED) {
+    else if (editor_get_key(KEYCODE_W) & KEYSTATE_JUST_PRESSED) {
         editor->cursor.y -= editor->tile_h;
         editor->should_redraw = true;
     }
@@ -392,20 +424,20 @@ void editor_move_cursor_tile_select()
     int cursor_w = editor->tile_preview_w;
     int cursor_h = editor->tile_preview_h;
     
-    if (editor_get_key(KEYCODE_D) == KEYSTATE_PRESSED) {
-        move_x = editor->tile_w;
+    if (editor_get_key(KEYCODE_D) & KEYSTATE_JUST_PRESSED) {
+        move_x = editor->tile_preview_w;
         editor->should_redraw = true;
     }
-    else if (editor_get_key(KEYCODE_A) == KEYSTATE_PRESSED) {
-        move_x = -editor->tile_w;
+    else if (editor_get_key(KEYCODE_A) & KEYSTATE_JUST_PRESSED) {
+        move_x = -editor->tile_preview_w;
         editor->should_redraw = true;
     }
-    else if (editor_get_key(KEYCODE_S) == KEYSTATE_PRESSED) {
-        move_y = editor->tile_h;
+    else if (editor_get_key(KEYCODE_S) & KEYSTATE_JUST_PRESSED) {
+        move_y = editor->tile_preview_h;
         editor->should_redraw = true;
     }
-    else if (editor_get_key(KEYCODE_W) == KEYSTATE_PRESSED) {
-        move_y = -editor->tile_h;
+    else if (editor_get_key(KEYCODE_W) & KEYSTATE_JUST_PRESSED) {
+        move_y = -editor->tile_preview_h;
         editor->should_redraw = true;
     }
     
@@ -504,6 +536,6 @@ void editor_tilemap_zoom(int zoom_dir)
         editor->cursor.y = editor->play_area_bottom - editor->tile_h - editor->play_area_top;
     }
     
-    editor->cursor.thickness = editor->tile_w / 8;
+    editor->cursor.thickness = 4;
     editor->should_redraw = true;
 }

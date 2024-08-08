@@ -208,7 +208,19 @@ win32_window_callback(HWND window_handle,
             int code = get_keycode_from_w_param(w_param);
             
             if (code != -1) {
-                editor_set_key(code, KEYSTATE_PRESSED);
+                if (!(editor_get_key(code) & KEYSTATE_PRESSED)) {
+                    editor_add_key_state(code, KEYSTATE_JUST_PRESSED);
+                }
+                editor_add_key_state(code, KEYSTATE_PRESSED);
+            }
+        } break;
+        
+        case WM_KEYUP:
+        {
+            int code = get_keycode_from_w_param(w_param);
+            
+            if (code != -1) {
+                editor_remove_key_state(code, KEYSTATE_PRESSED);
             }
         } break;
         
@@ -337,6 +349,10 @@ get_keycode_from_w_param(int w_param)
         
         case 'S': {
             return KEYCODE_S;
+        } break;
+        
+        case 'X': {
+            return KEYCODE_X;
         } break;
         
         case VK_RIGHT: {

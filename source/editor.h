@@ -90,6 +90,10 @@ void editor_set_key(const int code, const uint8_t state);
 //returns an int to allow returing -1 if the code doesn't exist
 int editor_get_key(const int code);
 
+void editor_add_key_state(const int code, const uint8_t state);
+
+void editor_remove_key_state(const int code, const uint8_t state);
+
 void editor_move_cursor_play_area(int max_x, int max_y);
 
 void editor_move_cursor_tile_select();

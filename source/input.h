@@ -34,8 +34,9 @@ enum
 
 enum
 {
-    KEYSTATE_RELEASED,
-    KEYSTATE_PRESSED
+    KEYSTATE_RELEASED = 1,
+    KEYSTATE_PRESSED = 1 << 1,
+    KEYSTATE_JUST_PRESSED = 1 << 2
 };
 
 
@@ -51,7 +52,7 @@ struct mouse_state
 
 struct keyboard_state
 {
-    uint8_t* keys;
+    uint32_t* keys;
 };
 
 
