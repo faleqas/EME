@@ -135,6 +135,14 @@ void _editor_update_play_area()
         editor->camera.tile_x--;
         editor->should_redraw = true;
     }
+    if (editor_get_key(KEYCODE_UP) & KEYSTATE_JUST_PRESSED) {
+        editor->camera.tile_y--;
+        editor->should_redraw = true;
+    }
+    else if (editor_get_key(KEYCODE_DOWN) & KEYSTATE_JUST_PRESSED) {
+        editor->camera.tile_y++;
+        editor->should_redraw = true;
+    }
     
     if (editor_get_key(KEYCODE_ADD) & KEYSTATE_JUST_PRESSED) {
         editor_tilemap_zoom(1);

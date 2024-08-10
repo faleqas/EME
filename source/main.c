@@ -363,6 +363,14 @@ get_keycode_from_w_param(int w_param)
             return KEYCODE_LEFT;
         } break;
         
+        case VK_DOWN: {
+            return KEYCODE_DOWN;
+        } break;
+        
+        case VK_UP: {
+            return KEYCODE_UP;
+        } break;
+        
         case VK_RETURN: {
             return KEYCODE_RETURN;
         } break;
