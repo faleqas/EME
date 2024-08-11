@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <memory.h>
 #include <malloc.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "asset_manager.h"
 
@@ -106,6 +108,114 @@ void asset_manager_load_tile(struct AssetManager* mng,
     {
         mng->tiles[i].id = 0;
     }
+}
+
+
+
+static char* trim_whitespace(const char* str)
+{
+    int len = strlen(str);
+    char* result = calloc(len+1, sizeof(char));
+
+    int i = 0;
+    for (int j = 0; j < len; j++)
+    {
+        if (str[j] != ' ') {
+            result[i] = str[j];
+            i++;
+        }
+    }
+
+    return result;
+}
+
+
+static void _split_string_push_to_result(char*** result, int* result_len, char* str)
+{
+    (*result_len)++;
+    if (!(*result))
+    {
+        *result = malloc(sizeof(char*) * (*result_len));
+    }
+    else
+    {
+        *result = realloc(*result, sizeof(char*) * (*result_len));
+    }
+
+    (*result)[(*result_len) - 1] = str;
+}
+
+
+static char** split_string(const char* str, const char delimiter)
+{
+    char** result = NULL;
+    int result_len = 0;
+
+    char* current_str = NULL;
+    int current_str_len = 1; //counting the null terminator
+    for (int i = 0; i < strlen(str); i++)
+    {
+        if ((str[i] == delimiter))
+        {
+            _split_string_push_to_result(&result, &result_len, current_str);
+            current_str = NULL;
+            current_str_len = 1;
+            continue;
+        }
+
+        current_str_len++;
+        if (!current_str)
+        {
+            current_str = malloc(sizeof(char) * current_str_len);
+        }
+        else
+        {
+            current_str = realloc(current_str, sizeof(char) * current_str_len);
+        }
+
+        current_str[current_str_len - 2] = str[i];
+        current_str[current_str_len - 1] = 0;
+
+        if (i == (strlen(str) - 1))
+        {
+            if (current_str)
+            {
+                _split_string_push_to_result(&result, &result_len, current_str);
+                current_str = NULL;
+                current_str_len = 1;
+            }
+        }
+    }
+
+    for (int i = 0; i < result_len; i++)
+    {
+        char* str = result[i];
+        int x = 0;
+    }
+
+    return result;
+}
+
+
+void asset_manager_load_tiles_from_file(struct AssetManager* mng, const char* path)
+{
+    FILE* fp;
+    fopen_s(&fp, path, "r");
+    
+    if (!fp) return;
+    
+    char str[256];
+    while (!feof(fp))
+    {
+        fgets(str, 256, fp);
+        char* trimmed_str = trim_whitespace(str);
+
+        char** parameters = split_string(trimmed_str, ':');
+
+        free(trimmed_str);
+    }
+    
+    fclose(fp);
 }
 
 

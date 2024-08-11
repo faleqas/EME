@@ -50,6 +50,9 @@ void editor_init()
     
     asset_manager_load_tile(editor->asset_mng,
                             TILE_TEST, IMAGE_TEST);
+    
+    asset_manager_load_tiles_from_file(editor->asset_mng, "tiles.txt");
+    
     editor->cursor.thickness = 4;
     //game_map_create(&(editor->game_map), m);
 }

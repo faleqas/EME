@@ -30,6 +30,8 @@ void asset_manager_load_image(struct AssetManager* mng,
 void asset_manager_load_tile(struct AssetManager* mng,
                              const int id, const int image_id);
 
+void asset_manager_load_tiles_from_file(struct AssetManager* mng, const char* path);
+
 struct Image* 
 asset_manager_get_image(const struct AssetManager* mng,
                         const int id);

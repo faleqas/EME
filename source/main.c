@@ -139,8 +139,8 @@ WinMain(HINSTANCE hInstance,
             VirtualFree(bitmap->data, 0, MEM_RELEASE);
         }
         editor_destroy();
-        DestroyWindow(g_window_handle);
     }
+    DestroyWindow(g_window_handle);
     
     return 0;
 }
