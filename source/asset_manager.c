@@ -146,8 +146,13 @@ static void _split_string_push_to_result(char*** result, int* result_len, char* 
 }
 
 
-static char** split_string(const char* str, const char delimiter)
+static char** split_string(const char* str, const char delimiter, int* out_len)
 {
+    if (!out_len)
+    {
+        return NULL;
+    }
+
     char** result = NULL;
     int result_len = 0;
 
@@ -187,13 +192,24 @@ static char** split_string(const char* str, const char delimiter)
         }
     }
 
+    *out_len = result_len;
+    return result;
+}
+
+
+static void split_string_free_result(char** result, int result_len)
+{
+    if (!result) return;
+
     for (int i = 0; i < result_len; i++)
     {
-        char* str = result[i];
-        int x = 0;
+        if (result[i])
+        {
+            free(result[i]);
+        }
     }
 
-    return result;
+    free(result);
 }
 
 
@@ -210,8 +226,17 @@ void asset_manager_load_tiles_from_file(struct AssetManager* mng, const char* pa
         fgets(str, 256, fp);
         char* trimmed_str = trim_whitespace(str);
 
-        char** parameters = split_string(trimmed_str, ':');
+        int parameters_len = 0;
+        char** parameters = split_string(trimmed_str, ':', &parameters_len);
 
+        if (parameters_len == 3)
+        {
+            const char* tile_name = parameters[0];
+            const char* tile_id = parameters[1];
+            const char* tile_sprite_path = parameters[2];
+        }
+
+        split_string_free_result(parameters, parameters_len);
         free(trimmed_str);
     }
     
