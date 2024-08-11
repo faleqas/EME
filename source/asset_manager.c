@@ -2,6 +2,7 @@
 #include <memory.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "asset_manager.h"
@@ -232,8 +233,14 @@ void asset_manager_load_tiles_from_file(struct AssetManager* mng, const char* pa
         if (parameters_len == 3)
         {
             const char* tile_name = parameters[0];
-            const char* tile_id = parameters[1];
+            int tile_id = atoi(parameters[1]);
             const char* tile_sprite_path = parameters[2];
+
+            asset_manager_load_image(mng,
+                tile_sprite_path, tile_id);
+
+            asset_manager_load_tile(mng,
+                tile_id, tile_id);
         }
 
         split_string_free_result(parameters, parameters_len);

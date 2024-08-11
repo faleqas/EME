@@ -1,1 +1,1 @@
-player : 1 : assets/player.png
+test : 1 : block.jpeg

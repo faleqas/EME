@@ -45,12 +45,12 @@ void editor_init()
     editor->play_area_top = editor->tile_h * 2 + 20;
     
     editor->asset_mng = asset_manager_create();
-    asset_manager_load_image(editor->asset_mng,
-                             "block.jpeg", IMAGE_TEST);
-    
-    asset_manager_load_tile(editor->asset_mng,
-                            TILE_TEST, IMAGE_TEST);
-    
+    //asset_manager_load_image(editor->asset_mng,
+    //                         "block.jpeg", IMAGE_TEST);
+    //
+    //asset_manager_load_tile(editor->asset_mng,
+    //                        TILE_TEST, IMAGE_TEST);
+    //
     asset_manager_load_tiles_from_file(editor->asset_mng, "tiles.txt");
     
     editor->cursor.thickness = 4;
@@ -180,7 +180,7 @@ void _editor_update_play_area_size()
 bool editor_draw()
 {
     if (editor->should_redraw) {
-        //draw tilemap
+
         struct Game_map* map = &(editor->game_map);
         struct Bitmap* bitmap = &(editor->bitmap);
         bitmap_clear(bitmap, 0x99, 0x99, 0x99);
