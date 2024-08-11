@@ -41,4 +41,8 @@ asset_manager_get_tile(const struct AssetManager* mng,
                        const int id);
 
 
+struct Tile*
+asset_manager_get_tile_from_index(const struct AssetManager* mng, const int index);
+
+
 #endif //ASSET_MANAGER_H

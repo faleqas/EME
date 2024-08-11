@@ -37,6 +37,8 @@ struct Editor
     int state;
     int client_w;
     int client_h;
+
+    int selected_tile_id;
     
     struct AssetManager* asset_mng;
     
@@ -87,7 +89,7 @@ struct Editor* editor_get();
 struct Bitmap* editor_get_bitmap();
 
 void editor_set_key(const int code, const uint8_t state);
-//returns an int to allow returing -1 if the code doesn't exist
+
 int editor_get_key(const int code);
 
 void editor_add_key_state(const int code, const uint8_t state);

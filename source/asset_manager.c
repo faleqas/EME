@@ -288,3 +288,26 @@ asset_manager_get_tile(const struct AssetManager* mng,
     
     return NULL;
 }
+
+
+struct Tile*
+asset_manager_get_tile_from_index(const struct AssetManager* mng, const int index)
+{
+    if (index < 0)
+    {
+        return NULL;
+    }
+
+    if (index >= (mng->_tiles_count))
+    {
+        return NULL;
+    }
+
+    struct Tile* tile = mng->tiles + index;
+    if (tile->id == 0)
+    {
+        return NULL;
+    }
+
+    return tile;
+}

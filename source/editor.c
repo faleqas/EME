@@ -116,14 +116,14 @@ void _editor_update_play_area()
     editor_move_cursor_play_area(editor->play_area_right, editor->play_area_bottom);
     
     if (editor_get_key(KEYCODE_RETURN) == KEYSTATE_PRESSED) {
-        editor_set_tile(TILE_TEST);
+        editor_set_tile(editor->selected_tile_id);
     }
     else if (editor_get_key(KEYCODE_BACKSPACE) == KEYSTATE_PRESSED) {
         editor_set_tile(TILE_NONE);
     }
     
     else if (editor->mouse.left_button == MOUSE_BUTTON_HELD) {
-        editor_set_tile(TILE_TEST);
+        editor_set_tile(editor->selected_tile_id);
     }
     
     else if (editor->mouse.right_button == MOUSE_BUTTON_HELD) {
@@ -467,6 +467,20 @@ void editor_move_cursor_tile_select()
     }
     else if ((editor->cursor.y + cursor_h) > editor->client_h) {
         editor->cursor.y -= move_y;
+    }
+
+    if (editor_get_key(KEYCODE_RETURN) & KEYSTATE_JUST_PRESSED)
+    {
+        int tile_x = editor->cursor.x / editor->tile_w;
+        int tile_y = editor->cursor.y / editor->tile_h;
+        int index = tile_x + (tile_y * 2);
+
+        struct Tile* tile = asset_manager_get_tile_from_index(editor->asset_mng, index);
+
+        if (tile)
+        {
+            editor->selected_tile_id = tile->id;
+        }
     }
 }
 
