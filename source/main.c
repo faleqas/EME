@@ -52,6 +52,9 @@ win32_update_window(HDC device_context,
 internal HMENU
 win32_create_menu();
 
+internal LRESULT CALLBACK
+win32_dialogbox_callback(HWND handle, UINT msg, WPARAM w_param, LPARAM l_param);
+
 internal int
 get_keycode_from_w_param(int w_param);
 
@@ -110,6 +113,30 @@ WinMain(HINSTANCE hInstance,
     
     int client_w = client_rect.right - client_rect.left;
     int client_h = client_rect.bottom - client_rect.top;
+
+    WNDCLASS dialog_window_class = { 0 };
+    dialog_window_class.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+    dialog_window_class.lpfnWndProc = &win32_dialogbox_callback;
+    dialog_window_class.hInstance = hInstance;
+    dialog_window_class.lpszClassName = "DIALOG_CLASS";
+
+    if (!RegisterClassA(&dialog_window_class)) {
+        //FAIL()
+        return 3;
+    }
+
+    HWND dialog_handle = CreateWindowExA(0,
+        "DIALOG_CLASS",
+        (LPCSTR)"Dialog Box",
+        WS_CAPTION | WS_BORDER | WS_VISIBLE | WS_OVERLAPPEDWINDOW | WS_POPUP,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        300,
+        300,
+        g_window_handle,
+        NULL,
+        hInstance,
+        NULL);
     
     while (running)
     {
@@ -118,7 +145,12 @@ WinMain(HINSTANCE hInstance,
         {
             peeked = true;
             if (message.message == WM_QUIT) {
-                running = false;
+                if (message.wParam == 1) {
+                   DestroyWindow(dialog_handle);
+                }
+                else {
+                    running = false;
+                }
             }
             TranslateMessage(&message);
             DispatchMessageA(&message);
@@ -141,6 +173,7 @@ WinMain(HINSTANCE hInstance,
         editor_destroy();
     }
     DestroyWindow(g_window_handle);
+    DestroyWindow(dialog_handle);
     
     return 0;
 }
@@ -158,6 +191,10 @@ win32_create_menu()
                 MF_STRING,
                 MI_SAVEMAP,
                 "Save Map");
+    AppendMenuA(menu,
+                MF_STRING,
+                MI_EDITMAP,
+                "Edit Map");
     AppendMenuA(menu,
                 MF_STRING,
                 MI_CLEARMAP,
@@ -327,6 +364,35 @@ win32_update_window(HDC device_context,
                   bitmap->data, &win32_bitmap_info,
                   DIB_RGB_COLORS,
                   SRCCOPY);
+    RECT rect;
+    rect.left = 0;
+    rect.top = 100;
+
+    SetBkMode(device_context, TRANSPARENT);
+    DrawTextA(device_context, "Hello Text", -1, &rect, DT_SINGLELINE | DT_NOCLIP);
+}
+
+
+internal LRESULT CALLBACK
+win32_dialogbox_callback(HWND handle, UINT msg, WPARAM w_param, LPARAM l_param)
+{
+    LRESULT result = 0;
+    switch (msg)
+    {
+        case WM_QUIT:
+        case WM_CLOSE:
+        case WM_DESTROY:
+        {
+            PostQuitMessage(1);
+        } break;
+
+        default:
+        {
+            result = DefWindowProcA(handle, msg, w_param, l_param);
+        } break;
+    }
+
+    return result;
 }
 
 

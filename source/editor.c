@@ -556,6 +556,11 @@ void editor_menu_callback(int item_id)
             game_map_clear(&(editor->game_map));
             editor->should_redraw = true;
         } break;
+
+        case MI_EDITMAP:
+        {
+            
+        } break;
     }
 }
 

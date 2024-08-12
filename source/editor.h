@@ -20,7 +20,8 @@ enum
     MI_NONE,
     MI_LOADMAP,
     MI_SAVEMAP,
-    MI_CLEARMAP
+    MI_CLEARMAP,
+    MI_EDITMAP
 };
 
 
