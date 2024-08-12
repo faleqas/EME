@@ -54,6 +54,7 @@ void editor_init()
     asset_manager_load_tiles_from_file(editor->asset_mng, "tiles.txt");
     
     editor->cursor.thickness = 4;
+    editor->selected_tile_id = TILE_TEST;
     //game_map_create(&(editor->game_map), m);
 }
 
@@ -177,131 +178,160 @@ void _editor_update_play_area_size()
 }
 
 
+static void editor_draw_play_area()
+{
+    struct Bitmap* bitmap = &(editor->bitmap);
+
+    bitmap_clear(bitmap, 0x99, 0x99, 0x99);
+    bitmap_draw_rect(bitmap,
+        editor->play_area_left,
+        editor->play_area_top,
+        editor->play_area_right - editor->play_area_left,
+        editor->play_area_bottom - editor->play_area_top,
+        0x22, 0x22, 0x22);
+}
+
+
+static void editor_draw_tilemap()
+{
+    struct Game_map* map = &(editor->game_map);
+    struct Bitmap* bitmap = &(editor->bitmap);
+
+    int id = -1;
+    int x = -1;
+    int y = -1;
+
+    struct Camera* camera = &(editor->camera);
+
+    struct Tile* tile = NULL;
+    struct Image* img = NULL;
+    for (int i = 0; i < map->tile_count; i++)
+    {
+        id = game_map_get_tile_by_index(map, i, &x, &y);
+
+        int draw_x = ((x - camera->tile_x) * editor->tile_w) + editor->play_area_left;
+        int draw_y = ((y - camera->tile_y) * editor->tile_h) + editor->play_area_top;
+
+        bool in_play_area = true;
+
+        if (draw_x < editor->play_area_left) {
+            in_play_area = false;
+        }
+        if (draw_y < editor->play_area_top) {
+            in_play_area = false;
+        }
+        if (draw_x > editor->play_area_right) {
+            in_play_area = false;
+        }
+        if (draw_y + editor->tile_h > editor->play_area_bottom) {
+            in_play_area = false;
+        }
+
+        if (!in_play_area) {
+            continue;
+        }
+
+        int w = editor->tile_w;
+        if (draw_x + editor->tile_w > editor->play_area_right) {
+            w = editor->play_area_right - draw_x;
+        }
+
+        if (id) {
+            tile = asset_manager_get_tile(editor->asset_mng,
+                id);
+            if (!tile) {
+                continue;
+            }
+
+            img = asset_manager_get_image(editor->asset_mng,
+                tile->image_id);
+            if (!img) {
+                continue;
+            }
+
+
+            draw_image(bitmap, img,
+                draw_x,
+                draw_y,
+                w, editor->tile_h);
+        }
+        else {
+            bitmap_draw_rect(bitmap,
+                draw_x, draw_y,
+                w, editor->tile_h,
+                0x44, 0x44, 0x44);
+        }
+    }
+}
+
+
+static void editor_draw_cursor()
+{
+    struct Bitmap* bitmap = &(editor->bitmap);
+
+    int cursor_x = editor->cursor.x;
+    int cursor_y = editor->cursor.y;
+    int cursor_w = editor->tile_w;
+    int cursor_h = editor->tile_h;
+
+    if (editor->state == E_PLAY_AREA) {
+        cursor_x += editor->play_area_left;
+        cursor_y += editor->play_area_top;
+
+        //cursor_w = editor->tile_preview_w;
+        //cursor_h = editor->tile_preview_h;
+    }
+    else if (editor->state == E_SELECT_TILE) {
+        cursor_w = editor->tile_preview_w;
+        cursor_h = editor->tile_preview_h;
+    }
+
+    bitmap_draw_rect_outline(bitmap,
+        cursor_x, cursor_y,
+        cursor_w, cursor_h,
+        0xff, 0xff, 0xff,
+        editor->cursor.thickness);
+}
+
+
+static void editor_draw_tiles_preview()
+{
+    struct Bitmap* bitmap = &(editor->bitmap);
+
+    for (int i = 0; i < editor->asset_mng->_tiles_count; i++)
+    {
+        struct Tile* tile = editor->asset_mng->tiles + i;
+        struct Image* img = asset_manager_get_image(editor->asset_mng,
+            tile->image_id);
+        draw_image(bitmap, img,
+            0,
+            0,
+            editor->tile_preview_w,
+            editor->tile_preview_h);
+    }
+}
+
+
 bool editor_draw()
 {
     if (editor->should_redraw) {
 
         struct Game_map* map = &(editor->game_map);
         struct Bitmap* bitmap = &(editor->bitmap);
-        bitmap_clear(bitmap, 0x99, 0x99, 0x99);
-        bitmap_draw_rect(bitmap,
-                         editor->play_area_left,
-                         editor->play_area_top,
-                         editor->play_area_right - editor->play_area_left,
-                         editor->play_area_bottom - editor->play_area_top,
-                         0x22, 0x22, 0x22);
         
-        { //drawing the tilemap
-            int id = -1;
-            int x = -1;
-            int y = -1;
-            
-            struct Camera* camera = &(editor->camera);
-            
-            struct Tile* tile = NULL;
-            struct Image* img = NULL;
-            for (int i = 0; i < map->tile_count; i++) 
-            {
-                id = game_map_get_tile_by_index(map, i, &x, &y);
-                
-                int draw_x = ((x - camera->tile_x) * editor->tile_w) + editor->play_area_left;
-                int draw_y = ((y - camera->tile_y) * editor->tile_h) + editor->play_area_top;
-                
-                bool in_play_area = true;
-                
-                if (draw_x < editor->play_area_left) {
-                    in_play_area = false;
-                }
-                if (draw_y < editor->play_area_top) {
-                    in_play_area = false;
-                }
-                if (draw_x > editor->play_area_right) {
-                    in_play_area = false;
-                }
-                if (draw_y + editor->tile_h > editor->play_area_bottom) {
-                    in_play_area = false;
-                }
-                
-                if (!in_play_area) {
-                    continue;
-                }
-                
-                int w = editor->tile_w;
-                if (draw_x + editor->tile_w > editor->play_area_right) {
-                    w = editor->play_area_right - draw_x;
-                }
-                
-                if (id) {
-                    tile = asset_manager_get_tile(editor->asset_mng,
-                                                  id);
-                    if (!tile) {
-                        continue;
-                    }
-                    
-                    img = asset_manager_get_image(editor->asset_mng,
-                                                  tile->image_id);
-                    if (!img) {
-                        continue;
-                    }
-                    
-                    
-                    draw_image(bitmap, img,
-                               draw_x,
-                               draw_y,
-                               w, editor->tile_h);
-                }
-                else {
-                    bitmap_draw_rect(bitmap,
-                                     draw_x, draw_y,
-                                     w, editor->tile_h,
-                                     0x44, 0x44, 0x44);
-                }
-            }
-        }
-        
-        int cursor_x = editor->cursor.x;
-        int cursor_y = editor->cursor.y;
-        int cursor_w = editor->tile_w;
-        int cursor_h = editor->tile_h;
-        
-        if (editor->state == E_PLAY_AREA) {
-            cursor_x += editor->play_area_left;
-            cursor_y += editor->play_area_top;
-            
-            //cursor_w = editor->tile_preview_w;
-            //cursor_h = editor->tile_preview_h;
-        }
-        else if (editor->state == E_SELECT_TILE) {
-            cursor_w = editor->tile_preview_w;
-            cursor_h = editor->tile_preview_h;
-        }
-        
+        editor_draw_play_area();
+        editor_draw_tilemap();
+        editor_draw_cursor();
+
+        //draw play area outline
         bitmap_draw_rect_outline(bitmap,
-                                 cursor_x, cursor_y,
-                                 cursor_w, cursor_h,
-                                 0xff, 0xff, 0xff,
-                                 editor->cursor.thickness);
-        
-        bitmap_draw_rect_outline(bitmap,
-                                 editor->play_area_left, editor->play_area_top,
-                                 (editor->play_area_right - editor->play_area_left),
-                                 (editor->play_area_bottom - editor->play_area_top),
-                                 0xFF, 0xFF, 0x00,
-                                 4);
-        
-        
-        for (int i = 0; i < editor->asset_mng->_tiles_count; i++)
-        {
-            struct Tile* tile = editor->asset_mng->tiles + i;
-            struct Image* img = asset_manager_get_image(editor->asset_mng,
-                                                        tile->image_id);
-            draw_image(bitmap, img,
-                       0,
-                       0,
-                       editor->tile_preview_w,
-                       editor->tile_preview_h);
-        }
-        
+            editor->play_area_left, editor->play_area_top,
+            (editor->play_area_right - editor->play_area_left),
+            (editor->play_area_bottom - editor->play_area_top),
+            0xFF, 0xFF, 0x00,
+            4);
+
+        editor_draw_tiles_preview();
         
         editor->should_redraw = false;
         
