@@ -124,19 +124,6 @@ WinMain(HINSTANCE hInstance,
         //FAIL()
         return 3;
     }
-
-    HWND dialog_handle = CreateWindowExA(0,
-        "DIALOG_CLASS",
-        (LPCSTR)"Dialog Box",
-        WS_CAPTION | WS_BORDER | WS_VISIBLE | WS_OVERLAPPEDWINDOW | WS_POPUP,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        300,
-        300,
-        g_window_handle,
-        NULL,
-        hInstance,
-        NULL);
     
     while (running)
     {
@@ -146,7 +133,7 @@ WinMain(HINSTANCE hInstance,
             peeked = true;
             if (message.message == WM_QUIT) {
                 if (message.wParam == 1) {
-                   DestroyWindow(dialog_handle);
+                   //DestroyWindow(dialog_handle);
                 }
                 else {
                     running = false;
@@ -173,7 +160,6 @@ WinMain(HINSTANCE hInstance,
         editor_destroy();
     }
     DestroyWindow(g_window_handle);
-    DestroyWindow(dialog_handle);
     
     return 0;
 }
@@ -230,6 +216,7 @@ win32_window_callback(HWND window_handle,
         case WM_COMMAND:
         {
             editor_menu_callback(w_param);
+        
         } break;
         
         case WM_MOUSEMOVE:
@@ -368,7 +355,6 @@ win32_update_window(HDC device_context,
     rect.left = 0;
     rect.top = 100;
 
-    SetBkMode(device_context, TRANSPARENT);
     DrawTextA(device_context, "Hello Text", -1, &rect, DT_SINGLELINE | DT_NOCLIP);
 }
 
@@ -384,6 +370,7 @@ win32_dialogbox_callback(HWND handle, UINT msg, WPARAM w_param, LPARAM l_param)
         case WM_DESTROY:
         {
             PostQuitMessage(1);
+            DestroyWindow(handle);
         } break;
 
         default:

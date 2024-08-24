@@ -78,14 +78,12 @@ void editor_update()
         if (editor_get_key(KEYCODE_S) & KEYSTATE_JUST_PRESSED) {
             if (editor->state == E_PLAY_AREA) {
                 editor->state = E_SELECT_TILE;
-                editor->cursor.x = 0;
-                editor->cursor.y = 0;
             }
             else {
                 editor->state = E_PLAY_AREA;
-                editor->cursor.x = 0;
-                editor->cursor.y = 0;
             }
+            editor_set_key(KEYCODE_S, KEYSTATE_RELEASED);
+            editor->should_redraw = true;
         }
     }
     
@@ -282,6 +280,8 @@ static void editor_draw_cursor()
         //cursor_h = editor->tile_preview_h;
     }
     else if (editor->state == E_SELECT_TILE) {
+        cursor_x = editor->cursor.tile_select_x;
+        cursor_y = editor->cursor.tile_select_y;
         cursor_w = editor->tile_preview_w;
         cursor_h = editor->tile_preview_h;
     }
@@ -482,27 +482,27 @@ void editor_move_cursor_tile_select()
         editor->should_redraw = true;
     }
     
-    editor->cursor.x += move_x;
-    editor->cursor.y += move_y;
+    editor->cursor.tile_select_x += move_x;
+    editor->cursor.tile_select_y += move_y;
     
-    if (editor->cursor.x < 0) {
-        editor->cursor.x -= move_x;
+    if (editor->cursor.tile_select_x < 0) {
+        editor->cursor.tile_select_x -= move_x;
     }
-    else if (editor->cursor.x + cursor_w > (editor->play_area_left)) {
-        editor->cursor.x -= move_x;
+    else if (editor->cursor.tile_select_x + cursor_w > (editor->play_area_left)) {
+        editor->cursor.tile_select_x -= move_x;
     }
     
-    if (editor->cursor.y < 0) {
-        editor->cursor.y -= move_y;
+    if (editor->cursor.tile_select_y < 0) {
+        editor->cursor.tile_select_y -= move_y;
     }
-    else if ((editor->cursor.y + cursor_h) > editor->client_h) {
-        editor->cursor.y -= move_y;
+    else if ((editor->cursor.tile_select_y + cursor_h) > editor->client_h) {
+        editor->cursor.tile_select_y -= move_y;
     }
 
     if (editor_get_key(KEYCODE_RETURN) & KEYSTATE_JUST_PRESSED)
     {
-        int tile_x = editor->cursor.x / editor->tile_w;
-        int tile_y = editor->cursor.y / editor->tile_h;
+        int tile_x = editor->cursor.tile_select_x / editor->tile_w;
+        int tile_y = editor->cursor.tile_select_y / editor->tile_h;
         int index = tile_x + (tile_y * 2);
 
         struct Tile* tile = asset_manager_get_tile_from_index(editor->asset_mng, index);

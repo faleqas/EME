@@ -7,6 +7,24 @@
 
 
 
+void create_dialog()
+{
+    HWND window_handle = win32_get_window_handle();
+    HWND dialog_handle = CreateWindowExA(0,
+        "DIALOG_CLASS",
+        (LPCSTR)"Dialog Box",
+        WS_BORDER | WS_VISIBLE | WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        300,
+        300,
+        window_handle,
+        NULL,
+        NULL,
+        NULL);
+}
+
+
 void get_client_rect(int* w, int* h)
 {
     //WIN32
