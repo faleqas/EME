@@ -3,6 +3,9 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include <stdint.h>
+#include <stdbool.h>
+
 enum
 {
     MOUSE_BUTTON_RELEASED,
@@ -22,6 +25,7 @@ enum
     KEYCODE_D,
     
     KEYCODE_X,
+    KEYCODE_Z,
     
     KEYCODE_RETURN,
     KEYCODE_BACKSPACE,
@@ -40,6 +44,7 @@ enum
 };
 
 
+//TODO() use bitflags for the mouse buttons and just_moved instead of seperate variables
 struct mouse_state
 {
     int x;

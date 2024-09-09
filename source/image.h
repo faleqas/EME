@@ -14,7 +14,8 @@ enum
     IMAGE_TEST
 };
 
-
+//each Image only has 1 resized version that you can change by calling resize_image().
+//after using resize_image you can choose to draw the original image or the current resized version using draw_image()
 struct Image
 {
     int id; //if you loaded the image yourself and not through
@@ -23,6 +24,10 @@ struct Image
     int h;
     int channels;
     byte* data;
+
+    int resized_w;
+    int resized_h;
+    byte* resized_data;
 };
 
 
@@ -36,7 +41,7 @@ void _draw_image(struct Bitmap* bitmap,
                  int channels,
                  int x, int y);
 
-byte* resize_image(const struct Image* image,
+void resize_image(struct Image* image,
                    int new_w, int new_h);
 
 void draw_image(struct Bitmap* bitmap,

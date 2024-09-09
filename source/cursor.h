@@ -8,8 +8,6 @@ struct Cursor
 {
     int x;
     int y;
-    int tile_select_x;
-    int tile_select_y;
     int thickness;
 };
 

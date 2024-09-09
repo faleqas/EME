@@ -29,6 +29,8 @@ global const char* window_menu_name = "EME_MENU";
 
 global BITMAPINFO win32_bitmap_info = {0};
 global struct Bitmap* bitmap = NULL;
+global HBITMAP hbitmap = NULL;
+global HDC bitmap_dc = NULL;
 
 //g_ = global
 //since window_handle gets passed to some functions
@@ -59,6 +61,17 @@ internal int
 get_keycode_from_w_param(int w_param);
 
 
+LARGE_INTEGER frequency;
+float target_seconds_per_frame = 1.0f / 60.0f;
+
+float get_seconds_per_frame(LARGE_INTEGER start_counter,
+                            LARGE_INTEGER end_counter)
+{
+    
+    return ((float)(end_counter.QuadPart - start_counter.QuadPart) / (float)frequency.QuadPart);
+}
+
+
 
 int CALLBACK
 WinMain(HINSTANCE hInstance,
@@ -67,9 +80,6 @@ WinMain(HINSTANCE hInstance,
         int       nShowCmd
         )
 {
-    editor_init();
-    struct Editor* editor = editor_get();
-    bitmap = editor_get_bitmap();
     
     WNDCLASS window_class = {0};
     window_class.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
@@ -103,6 +113,11 @@ WinMain(HINSTANCE hInstance,
         //FAIL()
         return 2;
     }
+
+    editor_init();
+    struct Editor* editor = editor_get();
+    bitmap = editor_get_bitmap();
+    editor->should_redraw = true;
     
     MSG message;
     bool running = true;
@@ -114,16 +129,24 @@ WinMain(HINSTANCE hInstance,
     int client_w = client_rect.right - client_rect.left;
     int client_h = client_rect.bottom - client_rect.top;
 
+    win32_resize_dib_section(client_w, client_h);
+    
     WNDCLASS dialog_window_class = { 0 };
     dialog_window_class.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
     dialog_window_class.lpfnWndProc = &win32_dialogbox_callback;
     dialog_window_class.hInstance = hInstance;
     dialog_window_class.lpszClassName = "DIALOG_CLASS";
-
+    
     if (!RegisterClassA(&dialog_window_class)) {
         //FAIL()
         return 3;
     }
+
+    LARGE_INTEGER start_counter, end_counter, counts, fps, ms;
+    
+    QueryPerformanceCounter(&start_counter);
+    
+    QueryPerformanceFrequency(&frequency);
     
     while (running)
     {
@@ -133,7 +156,7 @@ WinMain(HINSTANCE hInstance,
             peeked = true;
             if (message.message == WM_QUIT) {
                 if (message.wParam == 1) {
-                   //DestroyWindow(dialog_handle);
+                    //DestroyWindow(dialog_handle);
                 }
                 else {
                     running = false;
@@ -142,6 +165,33 @@ WinMain(HINSTANCE hInstance,
             TranslateMessage(&message);
             DispatchMessageA(&message);
         }
+
+        QueryPerformanceCounter(&end_counter);
+        float seconds_per_frame = get_seconds_per_frame(start_counter,
+                                                end_counter);
+        if(seconds_per_frame < target_seconds_per_frame)
+        {
+            DWORD sleep_ms;
+            
+            sleep_ms = (DWORD)(1000 * (target_seconds_per_frame - seconds_per_frame));
+            
+            Sleep(sleep_ms);
+            
+            while(seconds_per_frame < target_seconds_per_frame)
+            {
+                QueryPerformanceCounter(&end_counter);
+                
+                seconds_per_frame = get_seconds_per_frame(start_counter,
+                                                          end_counter);
+            }
+        }
+
+        QueryPerformanceCounter(&end_counter);
+        
+        seconds_per_frame = get_seconds_per_frame(start_counter,
+                                                  end_counter);
+        
+        start_counter = end_counter;
         
         editor_update();
         
@@ -149,8 +199,6 @@ WinMain(HINSTANCE hInstance,
             //draw bitmap to screen
             win32_update_window(dc, 0, 0, client_w, client_h);
         }
-        
-        //Sleep(2);
     }
     
     if (PROGRAM_CLEANUP) {
@@ -216,15 +264,21 @@ win32_window_callback(HWND window_handle,
         case WM_COMMAND:
         {
             editor_menu_callback(w_param);
-        
+            
         } break;
         
         case WM_MOUSEMOVE:
         {
             struct Editor* editor = editor_get();
-            editor->mouse.x = l_param & 0xFFFF;
-            editor->mouse.y = l_param >> 16;
-            editor->mouse.just_moved = true;
+            if (editor)
+            {
+                editor->mouse.x = l_param & 0xFFFF;
+                editor->mouse.y = l_param >> 16;
+                editor->mouse.just_moved = true;
+                //editor->cursor.x = editor->mouse.x;
+                //editor->cursor.y = editor->mouse.y;
+                //editor->should_redraw = true;
+            }
         } break;
         
         case WM_KEYDOWN:
@@ -251,26 +305,38 @@ win32_window_callback(HWND window_handle,
         case WM_LBUTTONDOWN:
         {
             struct Editor* editor = editor_get();
-            editor->mouse.left_button = MOUSE_BUTTON_HELD;
+            if (editor)
+            {
+                editor->mouse.left_button = MOUSE_BUTTON_HELD;
+            }
         } break;
         
         case WM_LBUTTONUP:
         {
             struct Editor* editor = editor_get();
-            editor->mouse.left_button = MOUSE_BUTTON_RELEASED;
+            if (editor)
+            {
+                editor->mouse.left_button = MOUSE_BUTTON_RELEASED;
+            }
         } break;
         
         
         case WM_RBUTTONDOWN:
         {
             struct Editor* editor = editor_get();
-            editor->mouse.right_button = MOUSE_BUTTON_HELD;
+            if (editor)
+            {
+                editor->mouse.right_button = MOUSE_BUTTON_HELD;
+            }
         } break;
         
         case WM_RBUTTONUP:
         {
             struct Editor* editor = editor_get();
-            editor->mouse.right_button = MOUSE_BUTTON_RELEASED;
+            if (editor)
+            {
+                editor->mouse.right_button = MOUSE_BUTTON_RELEASED;
+            }
         } break;
         
         case WM_SIZE:
@@ -283,13 +349,19 @@ win32_window_callback(HWND window_handle,
             
             win32_resize_dib_section(w, h);
             struct Editor* editor = editor_get();
-            editor->should_redraw = true;
+            if (editor)
+            {
+                editor->should_redraw = true;
+            }
         } break;
         
         case WM_PAINT:
         {
             PAINTSTRUCT paint_info;
             HDC device_context = BeginPaint(window_handle, &paint_info);
+            HBRUSH brush = CreateSolidBrush(RGB(255, 0, 0));
+            //FillRect(device_context, &paint_info.rcPaint, (HBRUSH) (brush));
+
             {
                 int x = paint_info.rcPaint.left;
                 int y = paint_info.rcPaint.top;
@@ -297,7 +369,7 @@ win32_window_callback(HWND window_handle,
                 int w = paint_info.rcPaint.right - x;
                 int h = paint_info.rcPaint.bottom - y;
                 
-                win32_update_window(device_context, x, y, w, h);
+                //win32_update_window(device_context, x, y, w, h);
             }
             EndPaint(window_handle, &paint_info);
         } break;
@@ -315,8 +387,14 @@ win32_window_callback(HWND window_handle,
 internal void
 win32_resize_dib_section(const int client_w, const int client_h)
 {
-    if (bitmap->data) {
-        VirtualFree(bitmap->data, 0, MEM_RELEASE);
+    if (!bitmap) return; //did not initial editor yet
+    if (!hbitmap)
+    {
+        bitmap_dc = CreateCompatibleDC(GetDC(g_window_handle));
+    }
+    else {
+        DeleteObject(hbitmap);
+        DeleteObject(bitmap_dc);
     }
     
     BITMAPINFOHEADER* header = &(win32_bitmap_info.bmiHeader);
@@ -331,8 +409,9 @@ win32_resize_dib_section(const int client_w, const int client_h)
     
     const size_t bitmap_memsize = client_w * client_h * bitmap->bytes_per_pixel;
     
-    bitmap->data = (byte*)VirtualAlloc(NULL, bitmap_memsize,
-                                       MEM_COMMIT, PAGE_READWRITE);
+    hbitmap = CreateDIBSection(bitmap_dc, header, DIB_RGB_COLORS, &(bitmap->data), NULL, 0);
+    SelectObject(bitmap_dc, hbitmap);
+    
     bitmap->width = client_w;
     bitmap->height = client_h;
     
@@ -345,17 +424,26 @@ win32_update_window(HDC device_context,
                     const int x, const int y,
                     const int w, const int h)
 {
+    BLENDFUNCTION bf = {0};
+    bf.BlendOp = AC_SRC_OVER;
+    bf.SourceConstantAlpha = 0xff;
+    bf.AlphaFormat = AC_SRC_ALPHA;
+
+    // if (!AlphaBlend(device_context, 0, 0, w, h, bitmap_dc, 0, 0, bitmap->width, bitmap->height, bf))
+    // {
+    //     return;
+    // }
+
     StretchDIBits(device_context,
                   0, 0, bitmap->width, bitmap->height,
                   0, 0, w, h,
                   bitmap->data, &win32_bitmap_info,
                   DIB_RGB_COLORS,
                   SRCCOPY);
+
     RECT rect;
     rect.left = 0;
     rect.top = 100;
-
-    DrawTextA(device_context, "Hello Text", -1, &rect, DT_SINGLELINE | DT_NOCLIP);
 }
 
 
@@ -372,13 +460,13 @@ win32_dialogbox_callback(HWND handle, UINT msg, WPARAM w_param, LPARAM l_param)
             PostQuitMessage(1);
             DestroyWindow(handle);
         } break;
-
+        
         default:
         {
             result = DefWindowProcA(handle, msg, w_param, l_param);
         } break;
     }
-
+    
     return result;
 }
 
@@ -406,6 +494,10 @@ get_keycode_from_w_param(int w_param)
         
         case 'X': {
             return KEYCODE_X;
+        } break;
+
+        case 'Z': {
+            return KEYCODE_Z;
         } break;
         
         case VK_RIGHT: {

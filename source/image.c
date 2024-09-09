@@ -42,10 +42,10 @@ void _draw_image(struct Bitmap* bitmap,
     if (y > bitmap->height) {
         return;
     }
-    if (x < 0) {
+    if ((x + w) < 0) {
         return;
     }
-    if (y < 0) {
+    if ((y + h) < 0) {
         return;
     }
     
@@ -59,10 +59,15 @@ void _draw_image(struct Bitmap* bitmap,
         byte red = data[i];
         byte green = data[i + 1];
         byte blue = data[i + 2];
+        byte alpha = 255;
+        if (channels == 4)
+        {
+            alpha = data[i + 3];
+        }
         
         bitmap_draw_pixel(bitmap,
                           x + source_x, y + source_y,
-                          red, green, blue);
+                          red, green, blue, alpha);
         
         source_x++;
         if (source_x >= w) {
@@ -73,11 +78,23 @@ void _draw_image(struct Bitmap* bitmap,
 }
 
 
-byte* resize_image(const struct Image* image,
+void resize_image(struct Image* image,
                    int new_w, int new_h)
 {
+    if ((image->resized_w == new_w) && (image->resized_h == new_h) && (image->resized_data))
+    {
+        return;
+    }
+    else if (image->resized_data)
+    {
+        free(image->resized_data);
+    }
+
     int resized_byte_count = new_w * new_h * image->channels;
-    byte* resized_data = calloc(resized_byte_count, 1);
+    
+    image->resized_w = new_w;
+    image->resized_h = new_h;
+    image->resized_data = calloc(resized_byte_count, 1);
     
     float scale_x = (float)new_w / (float)image->w;
     float scale_y = (float)new_h / (float)image->h;
@@ -87,9 +104,9 @@ byte* resize_image(const struct Image* image,
         int dest_y = 0;
         for (int i = 0; i < resized_byte_count; i += image->channels)
         {
-            byte* r = resized_data + i;
-            byte* g = resized_data + (i + 1);
-            byte* b = resized_data + (i + 2);
+            byte* r = image->resized_data + i;
+            byte* g = image->resized_data + (i + 1);
+            byte* b = image->resized_data + (i + 2);
             
             int source_x = (int)(floor(dest_x / (scale_x)));
             int source_y = (int)(floor(dest_y / (scale_y)));
@@ -108,7 +125,7 @@ byte* resize_image(const struct Image* image,
         }
     }
     
-    return resized_data;
+    return image->resized_data;
 }
 
 
@@ -118,19 +135,22 @@ void draw_image(struct Bitmap* bitmap,
                 int w, int h)
 {
     byte* data;
-    bool resized = false;
-    
-    if ((image->w != w) || (image->h != h)) {
-        data = resize_image(image, w, h);
-        resized = true;
+    int true_w = w;
+    int true_h = h;
+
+    if ((w == 0) || (h == 0))
+    {
+        data = image->data;
+        true_w = image->w;
+        true_h = image->h;
+    }
+    else if ((image->w != w) || (image->h != h)) {
+        resize_image(image, w, h);
+        data = image->resized_data;
     }
     else {
         data = image->data;
     }
     
-    _draw_image(bitmap, data, w, h, image->channels, x, y);
-    
-    if (resized) {
-        free(data);
-    }
+    _draw_image(bitmap, data, true_w, true_h, image->channels, x, y);
 }

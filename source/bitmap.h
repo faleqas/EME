@@ -23,12 +23,12 @@ void bitmap_clear(struct Bitmap* bitmap, byte r, byte g, byte b);
 
 void bitmap_draw_pixel(struct Bitmap* bitmap,
                        int x, int y,
-                       byte r, byte g, byte b);
+                       byte r, byte g, byte b, byte a);
 
 void bitmap_draw_rect(struct Bitmap* bitmap,
                       int x, int y,
                       int w, int h,
-                      byte r, byte g, byte b);
+                      byte r, byte g, byte b, byte a);
 
 
 void bitmap_draw_rect_outline(struct Bitmap* bitmap,

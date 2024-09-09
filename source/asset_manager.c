@@ -86,7 +86,7 @@ void asset_manager_load_tile(struct AssetManager* mng,
         return;
     }
     
-    for (int i = 0; i < mng->_images_count; i++)
+    for (int i = 0; i < mng->_tiles_count; i++)
     {
         if (mng->tiles[i].id == 0) {
             mng->tiles[i].id = id;
@@ -121,7 +121,7 @@ static char* trim_whitespace(const char* str)
     int i = 0;
     for (int j = 0; j < len; j++)
     {
-        if (str[j] != ' ') {
+        if ((str[j] != ' ') && (str[j] != '\n')) {
             result[i] = str[j];
             i++;
         }
@@ -258,6 +258,9 @@ asset_manager_get_image(const struct AssetManager* mng,
     if (id < 0) {
         return NULL;
     }
+
+    //TODO(omar): make sure this optimization will always work
+    return (mng->images + (id - 1));
     
     for (int i = 0; i < mng->_images_count; i++)
     {
@@ -278,6 +281,9 @@ asset_manager_get_tile(const struct AssetManager* mng,
     if (id < 0) {
         return NULL;
     }
+
+    //TODO(omar): make sure this optimization will always work
+    return (mng->tiles + (id - 1));
     
     for (int i = 0; i < mng->_tiles_count; i++)
     {
