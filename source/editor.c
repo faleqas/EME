@@ -51,7 +51,7 @@ void editor_init()
 
     get_client_rect(&(editor->client_w), &(editor->client_h));
 
-        editor->pa.x = 0;
+    editor->pa.x = 0;
     editor->pa.y = 0;
     editor->pa.tiles_w = editor->client_w / editor->tile_w;
     editor->pa.tiles_h = 10;
@@ -231,7 +231,7 @@ bool editor_draw()
         
         bitmap_draw_rect(bitmap, 0, 0, bitmap->width, pa->h + pa->y + cursor->thickness, 50, 50, 70, 255);
 
-        bitmap_draw_rect(bitmap, 0, pa->h + pa->y + cursor->thickness, bitmap->width, bitmap->height - (pa->h + pa->y), 10, 10, 10, 100);
+        bitmap_draw_rect(bitmap, 0, pa->h + pa->y + cursor->thickness, bitmap->width, bitmap->height - (pa->h + pa->y), 30, 30, 40, 70);
 
         //draw tile selection
         int x = 0;
@@ -285,6 +285,14 @@ bool editor_draw()
                 {
                     continue;
                 }
+                if ((draw_y + editor->tile_h) < 0)
+                {
+                    continue;
+                }
+                if ((draw_y) > bitmap->height)
+                {
+                    continue;
+                }
 
                 if ((draw_y + editor->tile_h) <= (pa->h + pa->y))
                 {
@@ -294,6 +302,10 @@ bool editor_draw()
                                 editor->tile_w, editor->tile_h,
                                 150, 150, 150, 20,
                                 cursor->thickness);
+                }
+                else
+                {
+                    continue;
                 }
 
                 int tile_id = game_map_get_tile_by_pos(map, x, y);

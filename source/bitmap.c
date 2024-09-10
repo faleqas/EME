@@ -80,18 +80,50 @@ void bitmap_draw_pixel(struct Bitmap* bitmap,
     }
 }
 
-
+//we don't use bitmap_draw_pixel() cause a function call that many times is way too slow
 void bitmap_draw_rect(struct Bitmap* bitmap,
                       int x, int y,
                       int w, int h,
                       byte r, byte g, byte b, byte a)
 {
+    float falpha = (float)(a) / 255.0f;
     for (int pixel_x = x; pixel_x < x + w; pixel_x++)
     {
         for (int pixel_y = y; pixel_y < y + h; pixel_y++)
         {
-            bitmap_draw_pixel(bitmap, pixel_x, pixel_y,
-                              r, g, b, a);
+            if (pixel_x < 0) {
+                continue;
+            }
+            else if (pixel_y < 0) {
+                continue;
+            }
+            else if (pixel_x >= bitmap->width) {
+                continue;
+            }
+            else if (pixel_y >= bitmap->height) {
+                continue;
+            }
+
+            // bitmap_draw_pixel(bitmap, pixel_x, pixel_y,
+            //                   r, g, b, a);
+
+            uint32_t* pixel = (uint32_t*)(bitmap->data);
+            int pixel_index = pixel_x + (pixel_y * bitmap->width);
+            pixel += pixel_index;
+            
+            uint8_t* blue_address = (uint8_t*)pixel;
+            uint8_t* green_address = (uint8_t*)pixel + 1;
+            uint8_t* red_address = (uint8_t*)pixel + 2;
+            uint8_t* alpha_address = (uint8_t*)pixel + 3;
+
+            // uint8_t src_blue = *blue_address;
+            // uint8_t src_green = *green_address;
+            // uint8_t src_red = *red_address;
+            // uint8_t src_alpha = *alpha_address;
+
+            *blue_address = falpha * b + (1 - falpha) * 70;
+            *green_address = falpha * g + (1 - falpha) * 50;
+            *red_address = falpha * r + (1 - falpha) * 50;
         }
     }
 }
