@@ -54,7 +54,7 @@ void editor_init()
     editor->pa.x = 0;
     editor->pa.y = 0;
     editor->pa.tiles_w = editor->client_w / editor->tile_w;
-    editor->pa.tiles_h = 10;
+    editor->pa.tiles_h = 12;
     editor->pa.w = editor->pa.tiles_w * editor->tile_w;
     editor->pa.h = editor->pa.tiles_h * editor->tile_h;
 
@@ -110,25 +110,31 @@ void editor_update()
 
     if (editor->should_redraw)
     {
-        int pa_right = editor->pa.w + editor->pa.x;
-        if (editor->cursor.x < editor->pa.x)
-        {
-            editor->cursor.x = editor->pa.x;
-        }
-        else if ((editor->cursor.x + editor->tile_w) > pa_right)
-        {
-            editor->cursor.x = pa_right - editor->tile_w;
-        }
+        // editor->cursor.x += editor->camera.x;
+        // editor->cursor.y += editor->camera.y;
+
+        // int pa_right = editor->pa.w + editor->pa.x;
+        // if (editor->cursor.x < editor->pa.x)
+        // {
+        //     editor->cursor.x = editor->pa.x;
+        // }
+        // else if ((editor->cursor.x + editor->tile_w) > pa_right)
+        // {
+        //     editor->cursor.x = pa_right - editor->tile_w;
+        // }
         
-        int pa_bottom = editor->pa.h + editor->pa.y;
-        if (editor->cursor.y < editor->pa.y)
-        {
-            editor->cursor.y = editor->pa.y;
-        }
-        else if ((editor->cursor.y + editor->tile_h) > pa_bottom)
-        {
-            editor->cursor.y = pa_bottom - editor->tile_h;
-        }
+        // int pa_bottom = editor->pa.h + editor->pa.y;
+        // if (editor->cursor.y < editor->pa.y)
+        // {
+        //     editor->cursor.y = editor->pa.y;
+        // }
+        // else if (((editor->cursor.y + editor->tile_h) + editor->camera.y) > pa_bottom)
+        // {
+        //     editor->cursor.y = pa_bottom - editor->tile_h;
+        // }
+
+        // editor->cursor.x += editor->camera.x;
+        // editor->cursor.y += editor->camera.y;
     }
     
     editor->mouse.just_moved = false;
@@ -144,6 +150,15 @@ void editor_set_tile(int tile_id)
 {
     int cursor_tx = editor->cursor.x / editor->tile_w;
     int cursor_ty = editor->cursor.y / editor->tile_h;
+
+    if (cursor_tx < 0)
+    {
+        return;
+    }
+    if (cursor_tx > (editor->game_map.tilemap_w))
+    {
+        return;
+    }
 
     game_map_set_tile(&(editor->game_map), cursor_tx, cursor_ty, tile_id);
 
@@ -190,9 +205,10 @@ void editor_move_cursor_mouse()
     int mx = editor->mouse.x;
     int my = editor->mouse.y;
 
-    if (my > (editor->pa.h + editor->pa.y))
+    if ((my) > (editor->pa.h + editor->pa.y))
     {
-        return;
+        my = (editor->pa.h + editor->pa.y) - editor->tile_h;
+        mx = editor->cursor.x;
     }
     mx += editor->camera.x;
     my += editor->camera.y;
@@ -230,28 +246,6 @@ bool editor_draw()
         struct play_area_data* pa = &(editor->pa);
         
         bitmap_draw_rect(bitmap, 0, 0, bitmap->width, pa->h + pa->y + cursor->thickness, 50, 50, 70, 255);
-
-        bitmap_draw_rect(bitmap, 0, pa->h + pa->y + cursor->thickness, bitmap->width, bitmap->height - (pa->h + pa->y), 30, 30, 40, 70);
-
-        //draw tile selection
-        int x = 0;
-        int y = pa->h + pa->y + cursor->thickness;
-        for (int i = 0; i < editor->asset_mng->_tiles_count; i++)
-        {
-            struct Tile* tile = editor->asset_mng->tiles + i;
-
-            if (tile->image_id > 0)
-            {
-                draw_image(bitmap, asset_manager_get_image(editor->asset_mng, tile->image_id), x, y, editor->tile_w, editor->tile_h);
-            }
-            x += editor->tile_w;
-
-            if ((x + editor->tile_w) > bitmap->width)
-            {
-                x = 0;
-                y += editor->tile_h;
-            }
-        }
         
         //draw grid
         //tx means tile_x
@@ -303,10 +297,6 @@ bool editor_draw()
                                 150, 150, 150, 20,
                                 cursor->thickness);
                 }
-                else
-                {
-                    continue;
-                }
 
                 int tile_id = game_map_get_tile_by_pos(map, x, y);
                 if (tile_id == 0) continue;
@@ -317,6 +307,28 @@ bool editor_draw()
                 draw_image(bitmap, asset_manager_get_image(editor->asset_mng, tile->image_id),
                 draw_x, draw_y,
                 editor->tile_w, editor->tile_h);
+            }
+        }
+
+        bitmap_draw_rect(bitmap, 0, pa->h + pa->y + cursor->thickness, bitmap->width, bitmap->height - (pa->h + pa->y), 30, 30, 40, 70);
+
+        //draw tile selection
+        int x = 0;
+        int y = pa->h + pa->y + cursor->thickness;
+        for (int i = 0; i < editor->asset_mng->_tiles_count; i++)
+        {
+            struct Tile* tile = editor->asset_mng->tiles + i;
+
+            if (tile->image_id > 0)
+            {
+                draw_image(bitmap, asset_manager_get_image(editor->asset_mng, tile->image_id), x, y, editor->tile_w, editor->tile_h);
+            }
+            x += editor->tile_w;
+
+            if ((x + editor->tile_w) > bitmap->width)
+            {
+                x = 0;
+                y += editor->tile_h;
             }
         }
         

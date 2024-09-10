@@ -9,7 +9,8 @@ struct Camera
 {
     float x;
     float y;
-    float velocity;
+    float velocity_x;
+    float velocity_y;
     float accel; //acceleration
     float decel; //decelration
     float max_speed;

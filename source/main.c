@@ -62,7 +62,7 @@ get_keycode_from_w_param(int w_param);
 
 
 LARGE_INTEGER frequency;
-float target_seconds_per_frame = 1.0f / 60.0f;
+float target_seconds_per_frame = 1.0f / 90.0f;
 
 float get_seconds_per_frame(LARGE_INTEGER start_counter,
                             LARGE_INTEGER end_counter)
